@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FinPilot AI — Personal Finance Intelligence Dashboard</title>
+  <style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0D1117;--bg2:#111827;--bg3:#1a2234;--bg4:#1e2a3a;
+  --em:#10B981;--blue:#3B82F6;--gold:#F59E0B;--red:#EF4444;
+  --text:#F0F4F8;--text2:#94A3B8;--text3:#64748B;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --card-r:12px;--em-glow:rgba(16,185,129,0.15)
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;min-height:100vh;overflow-x:hidden}
+.app{display:flex;min-height:100vh}
+.sidebar{width:220px;min-width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo{padding:20px 18px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--em),#059669);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.logo-text{font-size:15px;font-weight:700;letter-spacing:-.3px}
+.logo-text span{color:var(--em)}
+.nav{padding:12px 10px;flex:1}
+.nav-section{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;padding:8px 8px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:var(--text2);font-size:13px;transition:all .15s;margin-bottom:1px}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:rgba(16,185,129,0.12);color:var(--em);font-weight:500}
+.nav-item .icon{width:18px;height:18px;opacity:.7;flex-shrink:0}
+.nav-item.active .icon{opacity:1}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+.sidebar-bottom{padding:12px 10px;border-top:1px solid var(--border)}
+.user-card{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--bg3)}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#6366F1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.user-name{font-size:13px;font-weight:500}
+.user-plan{font-size:11px;color:var(--em)}
+.main{flex:1;overflow-x:hidden;overflow-y:auto}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.topbar-left{font-size:15px;font-weight:600}
+.topbar-left span{color:var(--text2);font-weight:400;font-size:13px;margin-left:8px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.tb-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text2);font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}
+.tb-btn:hover{border-color:var(--border2);color:var(--text)}
+.tb-btn.primary{background:rgba(16,185,129,0.12);border-color:rgba(16,185,129,0.3);color:var(--em)}
+.notif-btn{position:relative}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--red);border-radius:50%;border:1.5px solid var(--bg2)}
+.content{padding:24px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--card-r);padding:18px}
+.card-sm{padding:14px}
+.card-title{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.card-title .badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;letter-spacing:.3px}
+.badge-green{background:rgba(16,185,129,0.15);color:var(--em)}
+.badge-blue{background:rgba(59,130,246,0.15);color:var(--blue)}
+.badge-red{background:rgba(239,68,68,0.15);color:var(--red)}
+.badge-gold{background:rgba(245,158,11,0.15);color:var(--gold)}
+.stat-val{font-size:26px;font-weight:700;letter-spacing:-.5px;line-height:1}
+.stat-sub{font-size:12px;color:var(--text2);margin-top:5px;display:flex;align-items:center;gap:5px}
+.delta{font-size:11px;font-weight:600;padding:2px 6px;border-radius:5px}
+.delta.up{color:#10B981;background:rgba(16,185,129,0.1)}
+.delta.down{color:var(--red);background:rgba(239,68,68,0.1)}
+.score-ring{width:80px;height:80px;position:relative;flex-shrink:0}
+.score-ring svg{width:80px;height:80px}
+.score-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.score-label .num{font-size:20px;font-weight:800;color:var(--em)}
+.score-label .lbl{font-size:9px;color:var(--text3);font-weight:500}
+.health-row{display:flex;align-items:center;gap:16px}
+.health-info{flex:1}
+.health-factors{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.hf-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text2)}
+.hf-bar{flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.hf-fill{height:100%;border-radius:2px}
+.mini-chart{height:48px;position:relative}
+.mini-chart canvas{width:100%!important;height:48px!important}
+.nw-val{font-size:28px;font-weight:800;letter-spacing:-.5px}
+.ai-alert{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:14px;margin-bottom:8px}
+.ai-alert-header{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--red);margin-bottom:6px}
+.ai-alert-body{font-size:12px;color:var(--text2);line-height:1.5}
+.ai-alert-actions{display:flex;gap:8px;margin-top:10px}
+.alert-btn{padding:6px 12px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none}
+.btn-danger{background:rgba(239,68,68,0.15);color:var(--red)}
+.btn-success{background:rgba(16,185,129,0.15);color:var(--em)}
+.ai-insight{background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:8px;border-left:3px solid}
+.ai-insight p{font-size:12px;color:var(--text2);line-height:1.5}
+.ai-insight.em{border-color:var(--em)}
+.ai-insight.blue{border-color:var(--blue)}
+.ai-insight.gold{border-color:var(--gold)}
+.ai-insight .tag{font-size:10px;font-weight:700;letter-spacing:.4px;margin-bottom:4px}
+.portfolio-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.portfolio-row:last-child{border:none}
+.p-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.p-name{flex:1;font-size:13px;font-weight:500}
+.p-sub{font-size:11px;color:var(--text3)}
+.p-alloc{font-size:12px;color:var(--text2);margin-right:8px}
+.p-val{font-size:13px;font-weight:600;text-align:right}
+.p-chg{font-size:11px;text-align:right}
+.progress-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;border-radius:3px;transition:width .4s}
+.goal-row{padding:12px 0;border-bottom:1px solid var(--border)}
+.goal-row:last-child{border:none}
+.goal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.goal-name{font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px}
+.goal-emoji{font-size:15px}
+.goal-target{font-size:11px;color:var(--text3)}
+.goal-pct{font-size:12px;font-weight:700;color:var(--em)}
+.category-spend{display:flex;align-items:center;gap:10px;padding:8px 0}
+.cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.cat-name{flex:1;font-size:12px;color:var(--text2)}
+.cat-bar{width:80px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.cat-fill{height:100%;border-radius:3px}
+.cat-amt{font-size:12px;font-weight:600;min-width:50px;text-align:right}
+.copilot-panel{background:linear-gradient(135deg,rgba(16,185,129,0.06),rgba(59,130,246,0.06));border:1px solid rgba(16,185,129,0.2);border-radius:var(--card-r);padding:20px}
+.copilot-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.copilot-avatar{width:40px;height:40px;background:linear-gradient(135deg,var(--em),#3B82F6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.copilot-title{font-size:15px;font-weight:700}
+.copilot-sub{font-size:11px;color:var(--em)}
+.chat-bubble{background:var(--bg3);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.55;margin-bottom:10px}
+.chat-suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.suggestion{background:var(--bg3);border:1px solid var(--border2);border-radius:18px;padding:6px 12px;font-size:11px;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.suggestion:hover{background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3);color:var(--em)}
+.copilot-input{display:flex;gap:8px;margin-top:12px}
+.copilot-input input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:12px;outline:none}
+.copilot-input input:focus{border-color:rgba(16,185,129,0.4)}
+.send-btn{background:var(--em);border:none;border-radius:8px;padding:9px 14px;color:#000;font-size:12px;font-weight:700;cursor:pointer}
+.voice-fab{position:fixed;bottom:24px;right:24px;width:52px;height:52px;background:linear-gradient(135deg,var(--em),#059669);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;box-shadow:0 4px 20px rgba(16,185,129,0.4);z-index:100;transition:transform .15s}
+.voice-fab:hover{transform:scale(1.08)}
+.metric-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px}
+.metric-val{font-size:22px;font-weight:800;margin-top:4px}
+.metric-lbl{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.5px;text-transform:uppercase}
+.metric-delta{font-size:11px;margin-top:3px}
+.tax-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:12px}
+.tax-row:last-child{border:none}
+.notif-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.notif-item:last-child{border:none}
+.notif-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:1px}
+.notif-text{font-size:12px;color:var(--text2);line-height:1.45;flex:1}
+.notif-time{font-size:10px;color:var(--text3);margin-top:3px}
+.section-title{font-size:17px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.section-title span{color:var(--text3);font-size:13px;font-weight:400}
+.spending-type{background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.18);border-radius:10px;padding:14px;margin-bottom:8px}
+.st-emoji{font-size:24px;margin-bottom:6px}
+.st-type{font-size:14px;font-weight:700;color:var(--blue)}
+.st-desc{font-size:11px;color:var(--text2);margin-top:3px;line-height:1.45}
+  </style>
+</head>
+<body>
+
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden">FinPilot AI — personal finance intelligence dashboard showing health score, net worth, portfolio, AI copilot, fraud alerts, and spending analytics</h2>
+
+<div class="app">
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">💹</div>
+    <div class="logo-text">Fin<span>Pilot</span> AI</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      Net Worth
+    </div>
+    <div class="nav-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      Analytics
+    </div>
+    <div class="nav-section">AI Modules</div>
+    <div class="nav-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Fraud Detection
+      <span class="nav-badge">2</span>
+    </div>
+    <div class="nav-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      Investments
+    </div>
+    <div class="nav-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+      Budget Coach
+    </div>
+    <div class="nav-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Expense Forecast
+    </div>
+    <div class="nav-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      Credit Score
+    </div>
+    <div class="nav-section">Tools</div>
+    <div class="nav-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5H15.5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 8.67 9.33 8 8.5 8H3.5C2.67 8 2 8.67 2 9.5S2.67 11 3.5 11H8.5c.83 0 1.5-.67 1.5-1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg>
+      Tax Intelligence
+    </div>
+    <div class="nav-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      Goal Center
+    </div>
+    <div class="nav-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+      Tips Engine
+    </div>
+  </nav>
+  <div class="sidebar-bottom">
+    <div class="user-card">
+      <div class="avatar">AR</div>
+      <div>
+        <div class="user-name">Arjun Rao</div>
+        <div class="user-plan">Pro Member</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">Dashboard <span>Good morning, Arjun 👋</span></div>
+    <div class="topbar-right">
+      <button class="tb-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Search
+      </button>
+      <button class="tb-btn notif-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-dot"></span>
+      </button>
+      <button class="tb-btn primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        Sync Data
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="grid4">
+      <div class="metric-card">
+        <div class="metric-lbl">Net Worth</div>
+        <div class="metric-val" style="color:var(--em)">₹24.7L</div>
+        <div class="metric-delta"><span class="delta up">↑ 8.4%</span> vs last month</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-lbl">Monthly Income</div>
+        <div class="metric-val">₹1,25,000</div>
+        <div class="metric-delta"><span class="delta up">↑ 5.2%</span> stable</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-lbl">Monthly Spend</div>
+        <div class="metric-val">₹68,400</div>
+        <div class="metric-delta"><span class="delta down">↑ 3.1%</span> over target</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-lbl">Monthly Savings</div>
+        <div class="metric-val" style="color:var(--blue)">₹56,600</div>
+        <div class="metric-delta"><span class="delta up">45.3%</span> savings rate</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Financial Health Score <span class="badge badge-green">Excellent</span></div>
+        <div class="health-row">
+          <div class="score-ring">
+            <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
+              <circle cx="40" cy="40" r="32" fill="none" stroke="#10B981" stroke-width="8" stroke-linecap="round"
+                stroke-dasharray="201.06" stroke-dashoffset="36.19" transform="rotate(-90 40 40)"/>
+            </svg>
+            <div class="score-label"><span class="num">82</span><span class="lbl">/ 100</span></div>
+          </div>
+          <div class="health-info">
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px">Strong financial position</div>
+            <div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:8px">Savings rate and investment diversity are your top strengths. Debt ratio needs attention.</div>
+            <div class="health-factors">
+              <div class="hf-row"><span style="width:90px">Income stability</span><div class="hf-bar"><div class="hf-fill" style="width:90%;background:var(--em)"></div></div><span style="width:24px;text-align:right">90</span></div>
+              <div class="hf-row"><span style="width:90px">Savings rate</span><div class="hf-bar"><div class="hf-fill" style="width:85%;background:var(--em)"></div></div><span style="width:24px;text-align:right">85</span></div>
+              <div class="hf-row"><span style="width:90px">Debt ratio</span><div class="hf-bar"><div class="hf-fill" style="width:62%;background:var(--gold)"></div></div><span style="width:24px;text-align:right">62</span></div>
+              <div class="hf-row"><span style="width:90px">Investments</span><div class="hf-bar"><div class="hf-fill" style="width:78%;background:var(--blue)"></div></div><span style="width:24px;text-align:right">78</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">AI Fraud Detection <span class="badge badge-red">2 Alerts</span></div>
+        <div class="ai-alert">
+          <div class="ai-alert-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Potential Fraud Alert
+          </div>
+          <div class="ai-alert-body">Transaction of ₹35,000 at <strong>Mumbai POS Terminal</strong> — inconsistent with your usual Bengaluru activity. Behavioural risk score: 94/100.</div>
+          <div class="ai-alert-actions">
+            <button class="alert-btn btn-success">✓ It's me</button>
+            <button class="alert-btn btn-danger">⚑ Report Fraud</button>
+          </div>
+        </div>
+        <div class="ai-alert" style="border-color:rgba(245,158,11,0.25);background:rgba(245,158,11,0.04)">
+          <div class="ai-alert-header" style="color:var(--gold)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Suspicious Login Attempt
+          </div>
+          <div class="ai-alert-body">New device login from Hyderabad at 2:47 AM. Device fingerprint not recognised. MFA challenge triggered.</div>
+          <div class="ai-alert-actions">
+            <button class="alert-btn btn-success">Verify</button>
+            <button class="alert-btn btn-danger">Block Device</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Investment Portfolio <span class="badge badge-blue">₹12.4L</span></div>
+        <div class="portfolio-row">
+          <div class="p-icon" style="background:rgba(59,130,246,0.12)">📈</div>
+          <div style="flex:1">
+            <div class="p-name">Nifty 50 Index ETF</div>
+            <div class="p-sub">Equity · 38% allocation</div>
+            <div class="progress-bar" style="margin-top:4px"><div class="progress-fill" style="width:38%;background:var(--blue)"></div></div>
+          </div>
+          <div>
+            <div class="p-val" style="color:var(--em)">₹4,71,200</div>
+            <div class="p-chg" style="color:var(--em)">+12.4%</div>
+          </div>
+        </div>
+        <div class="portfolio-row">
+          <div class="p-icon" style="background:rgba(16,185,129,0.12)">🏦</div>
+          <div style="flex:1">
+            <div class="p-name">Mirae Asset Bluechip</div>
+            <div class="p-sub">Mutual Fund · 25% allocation</div>
+            <div class="progress-bar" style="margin-top:4px"><div class="progress-fill" style="width:25%;background:var(--em)"></div></div>
+          </div>
+          <div>
+            <div class="p-val">₹3,10,000</div>
+            <div class="p-chg" style="color:var(--em)">+9.2%</div>
+          </div>
+        </div>
+        <div class="portfolio-row">
+          <div class="p-icon" style="background:rgba(245,158,11,0.12)">🥇</div>
+          <div style="flex:1">
+            <div class="p-name">Sovereign Gold Bonds</div>
+            <div class="p-sub">Commodity · 15% allocation</div>
+            <div class="progress-bar" style="margin-top:4px"><div class="progress-fill" style="width:15%;background:var(--gold)"></div></div>
+          </div>
+          <div>
+            <div class="p-val">₹1,86,000</div>
+            <div class="p-chg" style="color:var(--gold)">+6.8%</div>
+          </div>
+        </div>
+        <div class="portfolio-row">
+          <div class="p-icon" style="background:rgba(99,102,241,0.12)">📋</div>
+          <div style="flex:1">
+            <div class="p-name">Corporate Bonds</div>
+            <div class="p-sub">Fixed Income · 22% allocation</div>
+            <div class="progress-bar" style="margin-top:4px"><div class="progress-fill" style="width:22%;background:#6366F1"></div></div>
+          </div>
+          <div>
+            <div class="p-val">₹2,72,800</div>
+            <div class="p-chg" style="color:var(--text3)">+4.1%</div>
+          </div>
+        </div>
+        <div class="ai-insight em" style="margin-top:12px">
+          <div class="tag" style="color:var(--em)">AI INSIGHT</div>
+          <p>Your tech allocation in the Nifty 50 ETF exceeds your target risk profile by 18%. Consider partial rebalancing toward bonds this quarter.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Expense Forecast — Next Month</div>
+        <div style="height:160px;position:relative;margin-bottom:12px">
+          <canvas id="expChart" role="img" aria-label="Bar chart showing predicted expenses by category for next month">Predicted monthly expenses: Housing 22000, Food 15000, Transport 8000, Shopping 12000, Utilities 5000</canvas>
+        </div>
+        <div>
+          <div class="category-spend">
+            <div class="cat-dot" style="background:#3B82F6"></div>
+            <div class="cat-name">Housing & Rent</div>
+            <div class="cat-bar"><div class="cat-fill" style="width:88%;background:#3B82F6"></div></div>
+            <div class="cat-amt">₹22,000</div>
+          </div>
+          <div class="category-spend">
+            <div class="cat-dot" style="background:#10B981"></div>
+            <div class="cat-name">Food & Dining</div>
+            <div class="cat-bar"><div class="cat-fill" style="width:72%;background:#10B981"></div></div>
+            <div class="cat-amt">₹15,400</div>
+          </div>
+          <div class="category-spend">
+            <div class="cat-dot" style="background:#F59E0B"></div>
+            <div class="cat-name">Shopping</div>
+            <div class="cat-bar"><div class="cat-fill" style="width:58%;background:#F59E0B"></div></div>
+            <div class="cat-amt">₹12,200</div>
+          </div>
+          <div class="category-spend">
+            <div class="cat-dot" style="background:#8B5CF6"></div>
+            <div class="cat-name">Transport</div>
+            <div class="cat-bar"><div class="cat-fill" style="width:38%;background:#8B5CF6"></div></div>
+            <div class="cat-amt">₹8,000</div>
+          </div>
+          <div class="category-spend">
+            <div class="cat-dot" style="background:#64748B"></div>
+            <div class="cat-name">Utilities</div>
+            <div class="cat-bar"><div class="cat-fill" style="width:24%;background:#64748B"></div></div>
+            <div class="cat-amt">₹4,800</div>
+          </div>
+        </div>
+        <div class="ai-insight gold" style="margin-top:10px">
+          <div class="tag" style="color:var(--gold)">AI PREDICTION</div>
+          <p>Dining expenses projected to rise 12% next month based on seasonal patterns. Cash flow shortfall risk: Low.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid3">
+      <div class="card">
+        <div class="card-title">Goal Center</div>
+        <div class="goal-row">
+          <div class="goal-header">
+            <div class="goal-name"><span class="goal-emoji">🏠</span> Emergency Fund</div>
+            <div class="goal-pct">73%</div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:5px">₹2,19,000 / ₹3,00,000 · 4 months left</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:73%;background:var(--em)"></div></div>
+        </div>
+        <div class="goal-row">
+          <div class="goal-header">
+            <div class="goal-name"><span class="goal-emoji">✈️</span> Europe Vacation</div>
+            <div class="goal-pct">41%</div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:5px">₹82,000 / ₹2,00,000 · 8 months left</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:41%;background:var(--blue)"></div></div>
+        </div>
+        <div class="goal-row">
+          <div class="goal-header">
+            <div class="goal-name"><span class="goal-emoji">🏡</span> Home Down Payment</div>
+            <div class="goal-pct">18%</div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:5px">₹3,60,000 / ₹20,00,000 · 4.5 yrs left</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:18%;background:var(--gold)"></div></div>
+        </div>
+        <div class="goal-row" style="border:none">
+          <div class="goal-header">
+            <div class="goal-name"><span class="goal-emoji">📈</span> Retirement Corpus</div>
+            <div class="goal-pct">9%</div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:5px">₹9,00,000 / ₹1.2 Cr · 28 yrs left</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:9%;background:#8B5CF6"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Smart Credit Score <span class="badge badge-blue">AI Score</span></div>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+          <div style="text-align:center">
+            <div style="font-size:40px;font-weight:800;color:var(--em);line-height:1">768</div>
+            <div style="font-size:11px;color:var(--em);margin-top:2px;font-weight:600">VERY GOOD</div>
+          </div>
+          <div style="flex:1">
+            <div style="height:8px;border-radius:4px;background:linear-gradient(to right,#EF4444,#F59E0B,#10B981);margin-bottom:5px;position:relative">
+              <div style="position:absolute;top:-3px;left:72%;width:14px;height:14px;background:#fff;border:2px solid var(--em);border-radius:50%;transform:translateX(-50%)"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3)"><span>300</span><span>500</span><span>700</span><span>850</span></div>
+          </div>
+        </div>
+        <div class="health-factors">
+          <div class="hf-row"><span style="width:110px">Payment history</span><div class="hf-bar"><div class="hf-fill" style="width:95%;background:var(--em)"></div></div><span style="color:var(--em);font-weight:600;width:32px;text-align:right">95%</span></div>
+          <div class="hf-row"><span style="width:110px">Credit utilisation</span><div class="hf-bar"><div class="hf-fill" style="width:42%;background:var(--gold)"></div></div><span style="color:var(--gold);font-weight:600;width:32px;text-align:right">42%</span></div>
+          <div class="hf-row"><span style="width:110px">Account age</span><div class="hf-bar"><div class="hf-fill" style="width:70%;background:var(--blue)"></div></div><span style="color:var(--blue);font-weight:600;width:32px;text-align:right">70%</span></div>
+          <div class="hf-row"><span style="width:110px">Savings consistency</span><div class="hf-bar"><div class="hf-fill" style="width:88%;background:var(--em)"></div></div><span style="color:var(--em);font-weight:600;width:32px;text-align:right">88%</span></div>
+        </div>
+        <div class="ai-insight blue" style="margin-top:12px">
+          <div class="tag" style="color:var(--blue)">SIMULATION</div>
+          <p>Reducing credit utilisation from 42% → 30% could improve your score by approximately 22 points over 60 days.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Spending Behaviour <span class="badge badge-blue">AI Analysis</span></div>
+        <div class="spending-type">
+          <div class="st-emoji">⚖️</div>
+          <div class="st-type">Balanced Planner</div>
+          <div class="st-desc">You balance spending and saving well with occasional lifestyle splurges. Strategic with major purchases.</div>
+        </div>
+        <div class="ai-insight gold" style="margin-bottom:8px">
+          <div class="tag" style="color:var(--gold)">PATTERN</div>
+          <p>43% of discretionary purchases happen after 8 PM — often food delivery and subscriptions.</p>
+        </div>
+        <div class="ai-insight em">
+          <div class="tag" style="color:var(--em)">COACH TIP</div>
+          <p>You are on track to save ₹8,200 extra this month. Reduce food delivery by 15% to reach your emergency fund goal sooner.</p>
+        </div>
+        <div class="ai-insight blue" style="margin-top:8px;margin-bottom:0">
+          <div class="tag" style="color:var(--blue)">TAX INSIGHT</div>
+          <p>₹46,000 in ELSS investments eligible for 80C deduction. Invest ₹104,000 more to max your tax-saving limit.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="copilot-panel">
+      <div class="copilot-header">
+        <div class="copilot-avatar">🤖</div>
+        <div>
+          <div class="copilot-title">FinPilot AI Copilot</div>
+          <div class="copilot-sub">Your personal AI Chief Financial Officer</div>
+        </div>
+        <div style="margin-left:auto">
+          <span class="badge badge-green" style="font-size:11px;padding:4px 10px">● Online</span>
+        </div>
+      </div>
+      <div class="chat-bubble">
+        Good morning, Arjun! Your net worth grew by ₹1.92L (8.4%) this month — excellent momentum. Your emergency fund is on track to complete in 4 months at the current savings rate. I noticed a potential fraud alert that needs your attention. Your investment portfolio is performing well, though your tech allocation is 18% above your risk target. Shall I walk you through rebalancing options?
+      </div>
+      <div class="chat-suggestions">
+        <div class="suggestion" onclick="sendPrompt('Analyze my complete finances and give me a detailed monthly report')">📊 Analyze my finances</div>
+        <div class="suggestion" onclick="sendPrompt('Help me rebalance my investment portfolio based on my risk profile')">⚖️ Rebalance portfolio</div>
+        <div class="suggestion" onclick="sendPrompt('How can I reduce my debt and improve my credit score faster?')">📉 Reduce debt faster</div>
+        <div class="suggestion" onclick="sendPrompt('Predict my expenses for next month and flag any cash flow risks')">🔮 Predict next month</div>
+        <div class="suggestion" onclick="sendPrompt('Give me personalized tax saving tips to maximize my 80C deductions')">💰 Tax saving tips</div>
+      </div>
+      <div class="copilot-input">
+        <input type="text" placeholder="Ask about your finances… e.g. Am I on track for retirement?" id="copilot-q"/>
+        <button class="send-btn" onclick="var q=document.getElementById('copilot-q').value.trim();if(q){sendPrompt(q)}">→</button>
+      </div>
+    </div>
+
+    <div style="margin-top:16px" class="grid2">
+      <div class="card">
+        <div class="card-title">Notifications <span class="badge badge-red">5 new</span></div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:rgba(239,68,68,0.12)">🚨</div>
+          <div>
+            <div class="notif-text"><strong style="color:var(--text)">Critical:</strong> Unusual transaction detected in Mumbai. Verify immediately.</div>
+            <div class="notif-time">2 minutes ago · Critical</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:rgba(16,185,129,0.12)">🎯</div>
+          <div>
+            <div class="notif-text">Emergency Fund reached 73% — you're ahead of schedule by 3 weeks!</div>
+            <div class="notif-time">1 hour ago · Milestone</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:rgba(245,158,11,0.12)">⚡</div>
+          <div>
+            <div class="notif-text">Budget alert: Food & Dining spending is at 89% of your monthly limit with 12 days remaining.</div>
+            <div class="notif-time">3 hours ago · Warning</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:rgba(59,130,246,0.12)">📈</div>
+          <div>
+            <div class="notif-text">Mirae Asset Bluechip returned 9.2% this quarter — outperforming benchmark by 1.8%.</div>
+            <div class="notif-time">Yesterday · Investment</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-icon" style="background:rgba(139,92,246,0.12)">💸</div>
+          <div>
+            <div class="notif-text">Amazon Prime renewal ₹1,499 due in 3 days. 2 other subscriptions due this week — total ₹3,240.</div>
+            <div class="notif-time">Yesterday · Bills</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Tax Intelligence Dashboard <span class="badge badge-gold">FY 2025-26</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="background:var(--bg3);border-radius:8px;padding:12px">
+            <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.4px;margin-bottom:3px">ESTIMATED TAX</div>
+            <div style="font-size:20px;font-weight:800;color:var(--red)">₹2,34,000</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Before deductions</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:8px;padding:12px">
+            <div style="font-size:10px;color:var(--text3);font-weight:600;letter-spacing:.4px;margin-bottom:3px">TAX SAVED</div>
+            <div style="font-size:20px;font-weight:800;color:var(--em)">₹78,000</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Via 80C + 80D</div>
+          </div>
+        </div>
+        <div class="tax-row"><span style="color:var(--text2)">80C Investments (ELSS, PPF)</span><span style="font-weight:600;color:var(--em)">₹46,000 / ₹1,50,000</span></div>
+        <div class="tax-row"><span style="color:var(--text2)">80D Health Insurance</span><span style="font-weight:600;color:var(--em)">₹25,000 / ₹25,000 ✓</span></div>
+        <div class="tax-row"><span style="color:var(--text2)">HRA Exemption</span><span style="font-weight:600">₹1,20,000</span></div>
+        <div class="tax-row"><span style="color:var(--text2)">Capital Gains (LTCG)</span><span style="font-weight:600;color:var(--gold)">₹38,400</span></div>
+        <div class="tax-row" style="border:none"><span style="color:var(--text2)">Net Tax Payable</span><span style="font-weight:700;color:var(--red);font-size:14px">₹1,56,000</span></div>
+        <div class="ai-insight gold" style="margin-top:10px">
+          <div class="tag" style="color:var(--gold)">TAX TIP</div>
+          <p>Invest ₹1,04,000 more in ELSS before March 31 to save an additional ₹31,200 in tax.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div class="voice-fab" title="AI Voice Assistant" onclick="sendPrompt('Open voice banking assistant — how much did I spend this month across all categories?')">🎙️</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+new Chart(document.getElementById('expChart'),{
+  type:'bar',
+  data:{
+    labels:['Housing','Food','Shopping','Transport','Utilities'],
+    datasets:[{
+      label:'Predicted Spend (₹)',
+      data:[22000,15400,12200,8000,4800],
+      backgroundColor:['#3B82F6','#10B981','#F59E0B','#8B5CF6','#64748B'],
+      borderRadius:5,
+      borderSkipped:false
+    }]
+  },
+  options:{
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'₹'+ctx.raw.toLocaleString('en-IN')}}},
+    scales:{
+      x:{grid:{display:false},ticks:{color:'#64748B',font:{size:10}}},
+      y:{display:false,grid:{display:false}}
+    }
+  }
+});
+
+function sendPrompt(prompt) {
+  console.log('Prompt sent:', prompt);
+  // Add your API call or chat logic here
+}
+</script>
+
+</body>
+</html>
